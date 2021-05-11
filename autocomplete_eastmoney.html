@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@voerro/vue-tagsinput@2.7.1/dist/style.css">
+		<style>
+			
+			.mb-1 {
+				margin-bottom: 1rem;
+			}
+
+			.tags-input-root .typeahead-dropdown .row {
+				display: flex;
+				padding: .25rem 0;
+			}
+
+			.tags-input-root .typeahead-dropdown .row > .icon {
+				width: 3rem;
+				height: 3rem;
+				border-radius: 100%;
+				font-size: 1.5rem;
+				background: #ffffff;
+				color: #000000;
+				margin-right: 1rem;
+			}
+
+			.tags-input-root .typeahead-dropdown .row > .text {
+				flex: 1;
+			}
+
+			.tags-input-root .typeahead-dropdown .row > .text > .name {
+				font-weight: 600;
+			}
+
+			.tags-input-root .typeahead-dropdown .row > .text > .address {
+				font-size: .8rem;
+			}
+		</style>
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@voerro/vue-tagsinput@2.7.1/dist/voerro-vue-tagsinput.js"></script>
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+	</head>
+	<body>
+		<div id="app">
+		  <tags-input 
+			element-id="tags"
+			v-model="selectedTags"
+			placeholder="输入股票代码"
+			:existing-tags="existingTags"
+			:typeahead="true"
+			typeahead-style="dropdown"
+			:only-existing-tags="true"
+			id-field="Code"
+			text-field="text"
+			display-field="display"
+			typeahead-max-results=10
+			limit = 4
+			@change="onChange"></tags-input>
+
+			<p>{{ selectedTags }}</p>
+			
+		</div>
+
+	</body>
+
+<script>
+	const VoerroTagsInput = window.VoerroTagsInput;
+	Vue.component('tags-input', VoerroTagsInput);
+	
+	let app = new Vue({
+	  el: '#app',
+	  data: {
+	    selectedTags:'',
+	    existingTags:[],
+	  },
+	  methods: {
+        onChange(value) {
+			if(value !==""){
+				let url = `https://searchapi.eastmoney.com/api/suggest/get?input=${value}&type=14&token=D43BF722C8E33BDC906FB84D85E326E8`
+				axios.get(url).then(response => {
+							const res = response.data.QuotationCodeTable.Data
+							const newRes = res.map(v => ({...v, text:v['Name']+'('+v['Code']+'-'+v['PinYin']+')', display: '<div class=row><div class=icon>'+v['SecurityTypeName']+'</div><div class=text><div class=name>'+v['Name']+'</div><div class=address>名称：'+v['Name']+'- 代码：'+v['Code']+'- 拼音：'+v['PinYin']+'</div></div></div>'}))
+							this.existingTags = newRes
+				})	
+			}
+        },
+	  },
+	});
+</script>
+
+</html>
